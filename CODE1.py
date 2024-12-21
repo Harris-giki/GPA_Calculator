@@ -1,213 +1,347 @@
 import streamlit as st
-import pandas as pd
-import numpy as np
-from scipy import stats
-import matplotlib.pyplot as plt
-import seaborn as sns
-import logging
-import os
-from datetime import datetime
-
-# Set up logging
-logging.basicConfig(
-    filename=f'grading_system_{datetime.now().strftime("%Y%m%d_%H%M%S")}.log',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-
-class GradingSystem:
-    def __init__(self):
-        self.data = None
-        self.credit_hours = {}
-        self.subject_columns = [
-            'math_score', 'history_score', 'physics_score',
-            'chemistry_score', 'biology_score', 'english_score',
-            'geography_score'
-        ]
-
-    def process_grades(self, scores, method='HEC', custom_distribution=None):
-        if method == 'HEC':
-            return self.apply_hec_relative_grading(scores)
-        else:
-            if not custom_distribution:
-                raise ValueError("Custom distribution required for custom grading method")
-            return self.apply_custom_relative_grading(scores, custom_distribution)
-
-    def apply_hec_relative_grading(self, scores):
-        mean = np.mean(scores)
-        std = np.std(scores)
-        
-        grades = []
-        for score in scores:
-            if score > mean + 2*std:
-                grades.append('A*')
-            elif score > mean + (3/2)*std:
-                grades.append('A')
-            elif score > mean + std:
-                grades.append('A-')
-            elif score > mean + std/2:
-                grades.append('B+')
-            elif score > mean - std/2:
-                grades.append('B')
-            elif score > mean - std:
-                grades.append('B-')
-            elif score > mean - (4/3)*std:
-                grades.append('C+')
-            elif score > mean - (5/3)*std:
-                grades.append('C')
-            elif score > mean - 2*std:
-                grades.append('C-')
-            else:
-                grades.append('D')
-        return grades
-
-    def apply_custom_relative_grading(self, scores, distribution):
-        sorted_scores = np.sort(scores)[::-1]
-        total_students = len(scores)
-        grades = [''] * total_students
-        
-        current_percentile = 0
-        score_to_grade = {}
-        
-        for grade, percentage in distribution.items():
-            threshold_index = int((current_percentile + percentage) * total_students) - 1
-            if threshold_index >= 0 and threshold_index < total_students:
-                threshold_score = sorted_scores[threshold_index]
-                score_to_grade[threshold_score] = grade
-            current_percentile += percentage
-        
-        for i, score in enumerate(scores):
-            for threshold_score, grade in score_to_grade.items():
-                if score >= threshold_score:
-                    grades[i] = grade
-                    break
-            if not grades[i]:
-                grades[i] = list(distribution.keys())[-1]
-                
-        return grades
-
+mport pandas as pd
+mport matplotlib.pyplot as plt
+mport seaborn as sns
+mport os
+mport io
+rom grading_logic import GradingSystem, GPACalculator
+def save_plot_to_bytes(fig):
+   """Convert matplotlib figure to bytes for downloading"""
+   buf = io.BytesIO()
+   fig.savefig(buf, format='png', bbox_inches='tight')
+   buf.seek(0)
+   return buf
 def main():
-    st.set_page_config(page_title="Student Grading System", layout="wide")
-    
-    st.title("Student Grading System")
-    st.write("Upload your student data and configure grading parameters")
-    
-    # Initialize session state
-    if 'grading_system' not in st.session_state:
-        st.session_state.grading_system = GradingSystem()
-    
+   st.set_page_config(page_title="Advanced Grading System", layout="wide")
+   st.title("Advanced Grading System")
+   st.markdown("---")
+    # Initialize session state for storing results
+   if 'results' not in st.session_state:
+       st.session_state.results = None
+   if 'figures' not in st.session_state:
+       st.session_state.figures = {}
+    # Sidebar configuration
+   st.sidebar.header("System Configuration")
+   system_choice = st.sidebar.radio(
+       "Choose Grading System Type:",
+       ["Relative Grading", "Absolute Grading"]
+   )
     # File upload
-    uploaded_file = st.file_uploader("Choose a CSV file", type="csv")
-    
+   st.header("Data Input")
+   uploaded_file = st.file_uploader("Upload your CSV file", type=['csv'])
     if uploaded_file is not None:
-        try:
-            data = pd.read_csv(uploaded_file)
-            st.session_state.grading_system.data = data
-            st.success("Data loaded successfully!")
-            
-            # Display data preview
-            st.subheader("Data Preview")
-            st.dataframe(data.head())
-            
-            # Credit hours input
-            st.subheader("Credit Hours Configuration")
-            col1, col2 = st.columns(2)
-            
-            credit_hours = {}
-            subjects = [col.replace('_score', '') for col in st.session_state.grading_system.subject_columns]
-            
-            for i, subject in enumerate(subjects):
-                with col1 if i < len(subjects)/2 else col2:
-                    credit_hours[f"{subject}_score"] = st.number_input(
-                        f"{subject.capitalize()} Credits",
-                        min_value=1,
-                        max_value=6,
-                        value=3
-                    )
-            
-            # Grading method selection
-            st.subheader("Grading Method")
-            grading_method = st.radio(
-                "Select grading method:",
-                ("HEC Relative Grading", "Custom Relative Grading")
-            )
-            
-            custom_distribution = None
-            if grading_method == "Custom Relative Grading":
-                st.subheader("Custom Grade Distribution")
-                st.write("Enter percentage for each grade (should sum to 100)")
-                
-                custom_distribution = {}
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    custom_distribution['A'] = st.slider('A Grade %', 0, 100, 10)
-                    custom_distribution['B+'] = st.slider('B+ Grade %', 0, 100, 15)
-                    custom_distribution['B'] = st.slider('B Grade %', 0, 100, 20)
-                    custom_distribution['B-'] = st.slider('B- Grade %', 0, 100, 15)
-                
-                with col2:
-                    custom_distribution['C+'] = st.slider('C+ Grade %', 0, 100, 15)
-                    custom_distribution['C'] = st.slider('C Grade %', 0, 100, 10)
-                    custom_distribution['C-'] = st.slider('C- Grade %', 0, 100, 10)
-                    custom_distribution['D'] = st.slider('D Grade %', 0, 100, 5)
-                
-                total = sum(custom_distribution.values())
-                st.write(f"Total percentage: {total}%")
-                
-                if total != 100:
-                    st.error("Percentages must sum to 100!")
-                    st.stop()
-                
-                # Convert to proportions
-                custom_distribution = {k: v/100 for k, v in custom_distribution.items()}
-            
-            if st.button("Process Grades"):
-                results = pd.DataFrame()
-                results[['first_name', 'last_name', 'email']] = data[['first_name', 'last_name', 'email']]
-                
-                # Process grades for each subject
-                for subject in st.session_state.grading_system.subject_columns:
-                    scores = data[subject].values
-                    grades = st.session_state.grading_system.process_grades(
-                        scores,
-                        'HEC' if grading_method == "HEC Relative Grading" else 'CUSTOM',
-                        custom_distribution
-                    )
-                    results[f'{subject}_grade'] = grades
-                
-                # Calculate CGPA
-                st.subheader("Results")
-                
-                # Display grade distribution
-                st.write("Grade Distribution by Subject")
-                fig, ax = plt.subplots(figsize=(12, 6))
-                grade_counts = pd.DataFrame()
-                
-                for subject in st.session_state.grading_system.subject_columns:
-                    grade_counts[subject.replace('_score', '')] = results[f'{subject}_grade'].value_counts()
-                
-                grade_counts.plot(kind='bar', ax=ax)
-                plt.xticks(rotation=45)
-                plt.tight_layout()
-                st.pyplot(fig)
-                
-                # Display detailed results
-                st.write("Detailed Results")
-                st.dataframe(results)
-                
-                # Save results
-                csv = results.to_csv(index=False)
-                st.download_button(
-                    label="Download Results CSV",
-                    data=csv,
-                    file_name="grading_results.csv",
-                    mime="text/csv"
-                )
-                
-        except Exception as e:
-            st.error(f"Error processing data: {str(e)}")
-            logging.error(f"Error: {str(e)}")
-
+       if system_choice == "Relative Grading":
+           handle_relative_grading(uploaded_file)
+       else:
+           handle_absolute_grading(uploaded_file)
+def handle_relative_grading(uploaded_file):
+   grading_system = GradingSystem()
+   
+   try:
+       # Load data
+       grading_system.data = pd.read_csv(uploaded_file)
+       st.success(f"Successfully loaded data for {len(grading_system.data)} students")
+        # Credit hours input
+       st.header("Credit Hours Configuration")
+       col1, col2 = st.columns(2)
+       
+       with col1:
+           st.write("Enter credit hours for each subject:")
+           credit_hours_set = True
+           for subject in grading_system.subject_columns:
+               subject_name = subject.replace('_score', '')
+               hours = st.number_input(
+                   f"Credit hours for {subject_name}",
+                   min_value=1.0,
+                   max_value=10.0,
+                   value=3.0,
+                   step=0.5,
+                   key=f"rel_{subject}"
+               )
+               grading_system.credit_hours[subject] = hours
+        with col2:
+           st.write("Preview of loaded data:")
+           st.dataframe(grading_system.data.head())
+        # Grading method selection
+       method = st.selectbox(
+           "Choose grading method:",
+           ["HEC", "Custom"]
+       )
+        custom_distribution = None
+       if method == "Custom":
+           st.subheader("Custom Grade Distribution")
+           st.write("Enter percentage distribution for grades (should sum to 100)")
+           
+           custom_distribution = {}
+           total = 0
+           col1, col2 = st.columns(2)
+           
+           grades = ['A', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D']
+           for i, grade in enumerate(grades):
+               with col1 if i < len(grades)/2 else col2:
+                   percentage = st.slider(
+                       f"Percentage for {grade}",
+                       0.0,
+                       100.0 - total,
+                       10.0,
+                       0.1,
+                       key=f"dist_{grade}"
+                   )
+                   total += percentage
+                   custom_distribution[grade] = percentage / 100
+            st.write(f"Total percentage: {total}%")
+           if abs(total - 100) > 0.1:
+               st.error("Total percentage must equal 100%")
+               return
+        if st.button("Process Grades"):
+           with st.spinner("Processing grades..."):
+               results = grading_system.process_grades(method, custom_distribution)
+               st.session_state.results = results
+               
+               # Display results
+               display_relative_results(results, grading_system)
+def display_relative_results(results, grading_system):
+   st.header("Results Analysis")
+   
+   # Overall CGPA Statistics
+   st.subheader("Overall CGPA Statistics")
+   col1, col2, col3, col4 = st.columns(4)
+   col1.metric("Average CGPA", f"{results['cgpa'].mean():.2f}")
+   col2.metric("Highest CGPA", f"{results['cgpa'].max():.2f}")
+   col3.metric("Lowest CGPA", f"{results['cgpa'].min():.2f}")
+   col4.metric("Standard Deviation", f"{results['cgpa'].std():.2f}")
+    # CGPA Distribution Plot
+   fig_cgpa = plt.figure(figsize=(10, 6))
+   sns.histplot(data=results, x='cgpa', bins=20)
+   plt.title('CGPA Distribution')
+   st.pyplot(fig_cgpa)
+   st.session_state.figures['cgpa_dist'] = fig_cgpa
+    # Top Performers
+   st.subheader("Top 5 Performers")
+   top_5 = results.nlargest(5, 'cgpa')[['first_name', 'last_name', 'cgpa']]
+   st.table(top_5)
+    # Subject-wise Analysis
+   st.subheader("Subject-wise Analysis")
+   for subject in grading_system.subject_columns:
+       subject_name = subject.replace('_score', '')
+       with st.expander(f"{subject_name.upper()} Analysis"):
+           col1, col2 = st.columns(2)
+           
+           # Score statistics
+           scores = results[subject]
+           with col1:
+               st.write("Score Statistics:")
+               stats_df = pd.DataFrame({
+                   'Metric': ['Mean', 'Median', 'Std Dev', 'Min', 'Max'],
+                   'Value': [
+                       f"{scores.mean():.2f}",
+                       f"{scores.median():.2f}",
+                       f"{scores.std():.2f}",
+                       f"{scores.min():.2f}",
+                       f"{scores.max():.2f}"
+                   ]
+               })
+               st.table(stats_df)
+           
+           # Grade distribution
+           with col2:
+               grade_col = f"{subject_name}_grade"
+               grade_counts = results[grade_col].value_counts().sort_index()
+               fig_grade = plt.figure(figsize=(8, 6))
+               grade_counts.plot(kind='bar')
+               plt.title(f'{subject_name} Grade Distribution')
+               plt.tight_layout()
+               st.pyplot(fig_grade)
+               st.session_state.figures[f'{subject_name}_grade_dist'] = fig_grade
+    # Download section
+   st.header("Download Results")
+   col1, col2 = st.columns(2)
+   
+   # Download results CSV
+   with col1:
+       st.download_button(
+           "Download Results CSV",
+           results.to_csv(index=False).encode('utf-8'),
+           "grading_results.csv",
+           "text/csv",
+           key='download-csv'
+       )
+   
+   # Download all plots
+   with col2:
+       for name, fig in st.session_state.figures.items():
+           plot_bytes = save_plot_to_bytes(fig)
+           st.download_button(
+               f"Download {name.replace('_', ' ').title()} Plot",
+               plot_bytes,
+               f"{name}.png",
+               "image/png",
+               key=f'download-{name}'
+           )
+def handle_absolute_grading(uploaded_file):
+   calculator = GPACalculator()
+   
+   try:
+       # Load data
+       calculator.df = pd.read_csv(uploaded_file)
+       st.success(f"Loaded data for {len(calculator.df)} students")
+        # Credit hours input
+       st.header("Credit Hours Configuration")
+       subjects = ['math', 'history', 'physics', 'chemistry', 'biology', 'english', 'geography']
+       
+       col1, col2 = st.columns(2)
+       with col1:
+           for subject in subjects:
+               hours = st.number_input(
+                   f"Credit hours for {subject}",
+                   min_value=1,
+                   max_value=10,
+                   value=3,
+                   key=f"abs_{subject}"
+               )
+               calculator.subject_credits[subject] = hours
+       
+       with col2:
+           st.write("Preview of loaded data:")
+           st.dataframe(calculator.df.head())
+        # Grading method selection
+       method = st.radio(
+           "Choose grading method:",
+           ["HEC Standard", "Custom Thresholds"]
+       )
+        if st.button("Calculate Results"):
+           with st.spinner("Processing..."):
+               if method == "HEC Standard":
+                   results = calculator.calculate_results(calculator.hec_thresholds)
+                   stats = calculator.generate_statistics(results)
+                   st.session_state.results = results
+                   
+                   st.header("Results (HEC Standard)")
+                   display_absolute_results(results, stats)
+                   
+               else:
+                   custom_thresholds = get_custom_thresholds_ui()
+                   if custom_thresholds:
+                       results = calculator.calculate_results(custom_thresholds)
+                       stats = calculator.generate_statistics(results)
+                       st.session_state.results = results
+                       
+                       st.header("Results (Custom Thresholds)")
+                       display_absolute_results(results, stats)
+    except Exception as e:
+       st.error(f"An error occurred: {str(e)}")
+def get_custom_thresholds_ui():
+   """UI for custom threshold input"""
+   st.subheader("Custom Grade Thresholds")
+   thresholds = {}
+   grades = ['A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D']
+   
+   st.write("Enter score ranges and grade points for each grade:")
+   
+   for grade in grades:
+       col1, col2, col3 = st.columns(3)
+       with col1:
+           min_score = st.number_input(f"{grade} - Min Score", 0, 100, key=f"min_{grade}")
+       with col2:
+           max_score = st.number_input(f"{grade} - Max Score", 0, 100, key=f"max_{grade}")
+       with col3:
+           points = st.number_input(f"{grade} - Grade Points", 0.0, 4.0, key=f"points_{grade}")
+           
+       thresholds[grade] = (min_score, max_score, points)
+   
+   # Add F grade automatically
+   min_threshold = min(min_score for min_score, _, _ in thresholds.values())
+   thresholds['F'] = (0, min_threshold - 0.01, 0.00)
+   
+   # Validate thresholds
+   if st.button("Validate Thresholds"):
+       if validate_thresholds(thresholds):
+           st.success("Thresholds are valid!")
+           return thresholds
+       else:
+           st.error("Invalid thresholds. Please check the ranges and points.")
+           return None
+def validate_thresholds(thresholds):
+   """Validate that thresholds don't overlap and are properly ordered"""
+   sorted_thresholds = sorted(thresholds.items(), key=lambda x: x[1][1], reverse=True)
+   previous_min = None
+   points_set = set()
+   
+   for grade, (min_score, max_score, points) in sorted_thresholds:
+       if not (0 <= min_score <= max_score <= 100):
+           return False
+       if previous_min is not None and min_score >= previous_min:
+           return False
+       if points in points_set:
+           return False
+       points_set.add(points)
+       previous_min = min_score
+   
+   return True
+def display_absolute_results(results, stats):
+   """Display results for absolute grading"""
+   # GPA Statistics
+   st.subheader("GPA Statistics")
+   col1, col2, col3, col4 = st.columns(4)
+   col1.metric("Mean GPA", f"{stats['gpa_stats']['mean']:.2f}")
+   col2.metric("Median GPA", f"{stats['gpa_stats']['median']:.2f}")
+   col3.metric("Highest GPA", f"{stats['gpa_stats']['max']:.2f}")
+   col4.metric("Lowest GPA", f"{stats['gpa_stats']['min']:.2f}")
+    # GPA Distribution Plot
+   fig_gpa = plt.figure(figsize=(10, 6))
+   sns.histplot(data=results, x='gpa', bins=20)
+   plt.title('GPA Distribution')
+   st.pyplot(fig_gpa)
+   st.session_state.figures['gpa_dist'] = fig_gpa
+    # Subject Analysis
+   st.subheader("Subject-wise Analysis")
+   subjects = ['math', 'history', 'physics', 'chemistry', 'biology', 'english', 'geography']
+   
+   for subject in subjects:
+       with st.expander(f"{subject.upper()} Analysis"):
+           col1, col2 = st.columns(2)
+           
+           with col1:
+               stats_key = f"{subject}_score_stats"
+               if stats_key in stats:
+                   st.write("Score Statistics:")
+                   stats_df = pd.DataFrame(stats[stats_key].items(), columns=['Metric', 'Value'])
+                   st.table(stats_df)
+           
+           with col2:
+               dist_key = f"{subject}_grade_distribution"
+               if dist_key in stats:
+                   grade_dist = pd.Series(stats[dist_key])
+                   fig_grade = plt.figure(figsize=(8, 6))
+                   grade_dist.plot(kind='bar')
+                   plt.title(f'{subject} Grade Distribution')
+                   plt.tight_layout()
+                   st.pyplot(fig_grade)
+                   st.session_state.figures[f'{subject}_grade_dist'] = fig_grade
+    # Download section
+   st.header("Download Results")
+   col1, col2 = st.columns(2)
+   
+   # Download results CSV
+   with col1:
+       st.download_button(
+           "Download Results CSV",
+           results.to_csv(index=False).encode('utf-8'),
+           "grading_results.csv",
+           "text/csv",
+           key='download-csv'
+       )
+   
+   # Download all plots
+   with col2:
+       for name, fig in st.session_state.figures.items():
+           plot_bytes = save_plot_to_bytes(fig)
+           st.download_button(
+               f"Download {name.replace('_', ' ').title()} Plot",
+               plot_bytes,
+               f"{name}.png",
+               "image/png",
+               key=f'download-{name}'
+           )
 if __name__ == "__main__":
-    main()
+   main()
