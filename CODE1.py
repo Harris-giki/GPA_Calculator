@@ -1,10 +1,10 @@
 import streamlit as st
-mport pandas as pd
-mport matplotlib.pyplot as plt
-mport seaborn as sns
-mport os
-mport io
-rom grading_logic import GradingSystem, GPACalculator
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import os
+import io
+from grading_logic import GradingSystem, GPACalculator
 def save_plot_to_bytes(fig):
    """Convert matplotlib figure to bytes for downloading"""
    buf = io.BytesIO()
