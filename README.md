@@ -12,13 +12,10 @@ A state-of-the-art academic grading system that combines facial recognition tech
 1. [Features](#-features)
 2. [System Architecture](#-system-architecture)
 3. [Grading Methodologies](#-grading-methodologies)
-4. [Installation](#-installation)
-5. [Usage Guide](#-usage-guide)
-6. [API Reference](#-api-reference)
-7. [Security Features](#-security-features)
-8. [Troubleshooting](#-troubleshooting)
-9. [Contributing](#-contributing)
-10. [License](#-license)
+4. [Usage Guide](#-usage-guide)
+5. [API Reference](#-api-reference)
+6. [Troubleshooting](#-troubleshooting)
+7. [Contributing](#-contributing)
 
 ## 🌟 Features
 
@@ -148,10 +145,6 @@ A state-of-the-art academic grading system that combines facial recognition tech
 
 1. Fork the repository
 2. Create feature branch:
-3
-## 📄 License
-
-MIT License. See [LICENSE](LICENSE) for details.
 
 ## 👥 Team
 
@@ -164,9 +157,4 @@ MIT License. See [LICENSE](LICENSE) for details.
 ## 📞 Support
 
 - Documentation: [docs.example.com](https://docs.example.com)
-- Email: support@example.com
-- Issues: [GitHub Issues](https://github.com/yourusername/academic-grading-system/issues)
-
----
-
-**Note**: This system is actively maintained and updated. For latest features and updates, check the [releases page](https://github.com/yourusername/academic-grading-system/releases).
+- Email: harris.giki@gmail.com
