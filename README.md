@@ -79,7 +79,7 @@ A complete academic grading system that combines facial recognition technology w
 #### Option to set custom Thresholds also available in both grading methodologies!
 
 ## 📘 Usage Guide
-
+![Usage Guide](flowchart.jpg)
 ### Starting the Application
 
 ### Data Format Requirements
