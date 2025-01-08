@@ -2,9 +2,6 @@
 
 ![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)
-![License](https://img.shields.io/badge/license-MIT-green)
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-
 A state-of-the-art academic grading system that combines facial recognition technology with comprehensive grading methodologies. The system supports both HEC standard and relative grading approaches, providing detailed analytics and visualizations for academic performance assessment.
 
 ## 📑 Table of Contents
@@ -102,20 +99,14 @@ A state-of-the-art academic grading system that combines facial recognition tech
 1. Prepare student images:
 
    data/
+
    ├── train/
-   
    │   ├── student1/
-   
    │   │   ├── img1.jpg
-   
    │   │   └── img2.jpg
-   
    │   └── student2/
-   
    │       ├── img1.jpg
-   
    │       └── img2.jpg
-   
    └── test/
        └── ...
 
