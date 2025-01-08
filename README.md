@@ -133,5 +133,5 @@ A complete academic grading system that combines facial recognition technology w
 
 ## 📞 Support
 
-- Documentation: [Click here to view!](Project_Report_2023428)
+- Documentation: [Click here to view!](Project_Report_2023428.pdf)
 - Email: harris.giki@gmail.com
