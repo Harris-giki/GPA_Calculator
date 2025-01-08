@@ -103,17 +103,24 @@ A state-of-the-art academic grading system that combines facial recognition tech
 
    data/
    ├── train/
+   
    │   ├── student1/
+   
    │   │   ├── img1.jpg
+   
    │   │   └── img2.jpg
+   
    │   └── student2/
+   
    │       ├── img1.jpg
+   
    │       └── img2.jpg
+   
    └── test/
        └── ...
 
 
-2. Train the model:
+3. Train the model:
  
 ## 🔌 API Reference
 
@@ -145,14 +152,6 @@ A state-of-the-art academic grading system that combines facial recognition tech
 
 1. Fork the repository
 2. Create feature branch:
-
-## 👥 Team
-
-| Role | Name | Contact |
-|------|------|---------|
-| Lead Developer | Your Name | your@email.com |
-| ML Engineer | Name | email@domain.com |
-| UI/UX Designer | Name | email@domain.com |
 
 ## 📞 Support
 
