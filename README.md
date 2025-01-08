@@ -11,9 +11,8 @@ A state-of-the-art academic grading system that combines facial recognition tech
 2. [System Architecture](#-system-architecture)
 3. [Grading Methodologies](#-grading-methodologies)
 4. [Usage Guide](#-usage-guide)
-5. [API Reference](#-api-reference)
-6. [Troubleshooting](#-troubleshooting)
-7. [Contributing](#-contributing)
+5. [Troubleshooting](#-troubleshooting)
+6. [Contributing](#-contributing)
 
 ## 🌟 Features
 
@@ -100,6 +99,7 @@ A state-of-the-art academic grading system that combines facial recognition tech
 1. Prepare student images:
 
    data/```
+   
    ├── train/
    │   ├── student1/
    │   │   ├── img1.jpg
@@ -111,22 +111,8 @@ A state-of-the-art academic grading system that combines facial recognition tech
        └── ...
 
 
-3. Train the model:
+2. Train the model:
  
-## 🔌 API Reference
-
-### Face Detection
-
-### Grading System
-
-## 🔐 Security Features
-
-| Feature | Description | Implementation |
-|---------|-------------|----------------|
-| Face Verification | Biometric authentication | CNN with triplet loss |
-| Data Encryption | AES-256 encryption | Encrypted CSV storage |
-| Access Control | Role-based access | JWT authentication |
-| Audit Logging | Activity tracking | SQL logging system |
 
 ## ❗ Troubleshooting
 
@@ -141,8 +127,8 @@ A state-of-the-art academic grading system that combines facial recognition tech
 
 ### Development Setup
 
-1. Fork the repository
-2. Create feature branch:
+1. Fork the repository.
+2. Create feature branch and add onto the project.
 
 ## 📞 Support
 
