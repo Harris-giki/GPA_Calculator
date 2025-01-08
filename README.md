@@ -3,7 +3,7 @@
 ![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)
 ![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)
 
-A state-of-the-art academic grading system that combines facial recognition technology with comprehensive grading methodologies. The system supports both HEC standard and relative grading approaches, providing detailed analytics and visualizations for academic performance assessment.
+A complete academic grading system that combines facial recognition technology with comprehensive grading methodologies. The system supports both HEC based absolute and relative grading approaches, moreover with an option to set custom threshold as per any standard grading policy in both absolute and relative grading thus providing detailed analytics and visualizations for academic performance assessment.
 
 ## 📑 Table of Contents
 
@@ -76,6 +76,7 @@ A state-of-the-art academic grading system that combines facial recognition tech
 | C-    | -1.0σ to -0.5σ         | Next 17%    |
 | D     | < -1.0σ                | Bottom 5%   |
 
+#### Option to set custom Thresholds also available in both grading methodologies!
 
 ## 📘 Usage Guide
 
